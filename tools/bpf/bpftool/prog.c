@@ -1379,8 +1379,10 @@ static int load_with_options(int argc, char **argv, bool first_prog_only)
 	enum bpf_attach_type expected_attach_type;
 	struct map_replace *map_replace = NULL;
 	struct bpf_program *prog = NULL, *pos;
+	const char *btf_target = NULL;
 	unsigned int old_map_fds = 0;
 	const char *pinmaps = NULL;
+	int attach_target_fd = 0;
 	struct bpf_object *obj;
 	struct bpf_map *map;
 	const char *pinfile;
@@ -1497,6 +1499,20 @@ static int load_with_options(int argc, char **argv, bool first_prog_only)
 				goto err_free_reuse_maps;
 
 			pinmaps = GET_ARG();
+		} else if (is_prefix(*argv, "btf_target")) {
+			NEXT_ARG();
+
+			if (!REQ_ARGS(1))
+				goto err_free_reuse_maps;
+
+			btf_target = GET_ARG();
+
+			if (is_prefix(*argv, "attach_target")) {
+				NEXT_ARG();
+				attach_target_fd = prog_parse_fd(&argc, &argv);
+				if (attach_target_fd < 0)
+					goto err_free_reuse_maps;
+			}
 		} else {
 			p_err("expected no more arguments, 'type', 'map' or 'dev', got: '%s'?",
 			      *argv);
@@ -1527,6 +1543,13 @@ static int load_with_options(int argc, char **argv, bool first_prog_only)
 		bpf_program__set_ifindex(pos, ifindex);
 		bpf_program__set_type(pos, prog_type);
 		bpf_program__set_expected_attach_type(pos, expected_attach_type);
+		if (btf_target) {
+			err = bpf_program__set_attach_target(pos,
+							     attach_target_fd,
+							     btf_target);
+			if (err)
+				goto err_close_obj;
+		}
 	}
 
 	qsort(map_replace, old_map_fds, sizeof(*map_replace),
@@ -1637,6 +1660,9 @@ static int load_with_options(int argc, char **argv, bool first_prog_only)
 		close(map_replace[i].fd);
 	free(map_replace);
 
+	if (attach_target_fd > 0)
+		close(attach_target_fd);
+
 	return 0;
 
 err_unpin:
@@ -1650,6 +1676,10 @@ err_free_reuse_maps:
 	for (i = 0; i < old_map_fds; i++)
 		close(map_replace[i].fd);
 	free(map_replace);
+
+	if (attach_target_fd > 0)
+		close(attach_target_fd);
+
 	return -1;
 }
 
@@ -2229,8 +2259,9 @@ static int do_help(int argc, char **argv)
 		"       %1$s %2$s pin   PROG FILE\n"
 		"       %1$s %2$s { load | loadall } OBJ  PATH \\\n"
 		"                         [type TYPE] [dev NAME] \\\n"
-		"                         [map { idx IDX | name NAME } MAP]\\\n"
-		"                         [pinmaps MAP_DIR]\n"
+		"                         [map { idx IDX | name NAME } MAP] \\\n"
+		"                         [pinmaps MAP_DIR] \\\n"
+		"                         [btf_target BTF_ID [attach_target PROG]]\n"
 		"       %1$s %2$s attach PROG ATTACH_TYPE [MAP]\n"
 		"       %1$s %2$s detach PROG ATTACH_TYPE [MAP]\n"
 		"       %1$s %2$s run PROG \\\n"
