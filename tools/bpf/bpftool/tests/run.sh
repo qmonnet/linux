@@ -5,8 +5,15 @@ set -e
 shopt -s nullglob
 
 PINNED_PATH="/sys/fs/bpf/bpftool_test"
-json=""
 retval=0
+
+if [ -t 1 ]; then
+    PASS="\e[32mpass\e[0m\n"
+    FAIL="\e[1;31mFAIL\e[0m\n"
+else
+    PASS="pass\n"
+    FAIL="FAIL\n"
+fi
 
 printf "# Loading programs with section names\n"
 
@@ -21,10 +28,10 @@ for f in *.o; do
     printf "%30s:\t" "${f}"
     if bpftool prog load "${f}" "${PINNED_PATH}" 2>/dev/null && \
         [ -f "${PINNED_PATH}" ]; then
-        printf "pass\n"
+        printf "${PASS}"
         rm -f "${PINNED_PATH}"
     else
-        printf "FAIL\n"
+        printf "${FAIL}"
         retval=$((${retval}+1))
     fi
 done
@@ -90,10 +97,10 @@ for t in "${prog_types[@]}"; do
     printf "%30s:\t" "${t}"
     if bpftool prog load ret1.o "${PINNED_PATH}" type "${t}" 2>/dev/null && \
         [ -f "${PINNED_PATH}" ]; then
-        printf "pass\n"
+        printf "${PASS}"
         rm -f "${PINNED_PATH}"
     else
-        printf "FAIL\n"
+        printf "${FAIL}"
         retval=$((${retval}+1))
     fi
 done
@@ -142,10 +149,10 @@ for t in "${map_types[@]}"; do
     printf "%30s:\t" "${t}"
     if bpftool map create "${PINNED_PATH}" type "${t}" key 4 value 4 entries 1 name test_map 2>/dev/null && \
         [ -f "${PINNED_PATH}" ]; then
-        printf "pass\n"
+        printf "${PASS}"
         rm -f "${PINNED_PATH}"
     else
-        printf "FAIL\n"
+        printf "${FAIL}"
         retval=$((${retval}+1))
     fi
 done
@@ -155,10 +162,10 @@ done
 printf "%30s:\t" "lpm_trie"
 if bpftool map create "${PINNED_PATH}" type lpm_trie key 8 value 4 entries 1 name test_map flag 1 2>/dev/null && \
     [ -f "${PINNED_PATH}" ]; then
-    printf "pass\n"
+    printf "${PASS}"
     rm -f "${PINNED_PATH}"
 else
-    printf "FAIL\n"
+    printf "${FAIL}"
     retval=$((${retval}+1))
 fi
 
@@ -166,10 +173,10 @@ fi
 printf "%30s:\t" "stack_trace"
 if bpftool map create "${PINNED_PATH}" type stack_trace key 4 value 8 entries 1 name test_map 2>/dev/null && \
     [ -f "${PINNED_PATH}" ]; then
-    printf "pass\n"
+    printf "${PASS}"
     rm -f "${PINNED_PATH}"
 else
-    printf "FAIL\n"
+    printf "${FAIL}"
     retval=$((${retval}+1))
 fi
 
@@ -178,10 +185,10 @@ fi
 printf "%30s:\t" "ringbuf"
 if bpftool map create "${PINNED_PATH}" type ringbuf key 0 value 0 entries 4096 name test_map 2>/dev/null && \
     [ -f "${PINNED_PATH}" ]; then
-    printf "pass\n"
+    printf "${PASS}"
     rm -f "${PINNED_PATH}"
 else
-    printf "FAIL\n"
+    printf "${FAIL}"
     retval=$((${retval}+1))
 fi
 
@@ -197,10 +204,10 @@ for t in "${cgroup_storage_map_types[@]}"; do
     printf "%30s:\t" "${t}"
     if bpftool map create "${PINNED_PATH}" type "${t}" key 8 value 8 entries 0 name test_map 2>/dev/null && \
         [ -f "${PINNED_PATH}" ]; then
-        printf "pass\n"
+        printf "${PASS}"
         rm -f "${PINNED_PATH}"
     else
-        printf "FAIL\n"
+        printf "${FAIL}"
         retval=$((${retval}+1))
     fi
 done
@@ -215,10 +222,10 @@ for t in "${nokey_map_types[@]}"; do
     printf "%30s:\t" "${t}"
     if bpftool map create "${PINNED_PATH}" type "${t}" value 4 entries 1 name test_map 2>/dev/null && \
         [ -f "${PINNED_PATH}" ]; then
-        printf "pass\n"
+        printf "${PASS}"
         rm -f "${PINNED_PATH}"
     else
-        printf "FAIL\n"
+        printf "${FAIL}"
         retval=$((${retval}+1))
     fi
 done
@@ -236,10 +243,10 @@ if bpftool map create "${INNER_MAP_PINNED_PATH}" type array key 4 value 4 entrie
         printf "%30s:\t" "${t}"
         if bpftool map create "${PINNED_PATH}" type "${t}" key 4 value 4 entries 1 name test_map inner_map pinned "${INNER_MAP_PINNED_PATH}" 2>/dev/null && \
             [ -f "${PINNED_PATH}" ]; then
-            printf "pass\n"
+            printf "${PASS}"
             rm -f "${PINNED_PATH}"
         else
-            printf "FAIL\n"
+            printf "${FAIL}"
             retval=$((${retval}+1))
         fi
     done
