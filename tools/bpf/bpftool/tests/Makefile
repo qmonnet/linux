@@ -47,9 +47,38 @@ STRAIGHTFORWARDS_TYPES = \
 	cgroup.getsockname6.o \
 	cgroup.sysctl.o \
 	cgroup.getsockopt.o \
-	cgroup.setsockopt.o
+	cgroup.setsockopt.o \
+	struct_ops.o
 
-all: $(SRC).o $(STRAIGHTFORWARDS_TYPES) kprobe.o
+# These types require an additional "parameter" in the section name, the name
+# of the hook of the provided type on which the program should be attached.
+# At the moment, they are treated the same way as "straightforwards" program
+# types.
+COMPOUND_TYPES = \
+	kprobe.o \
+	uprobe.o \
+	kretprobe.o \
+	uretprobe.o \
+	tracepoint.o \
+	tp.o \
+	raw_tracepoint.o \
+	raw_tp.o \
+	tp_btf.o \
+	fentry.o \
+	fmod_ret.o \
+	fexit.o \
+	fentry.s.o \
+	fmod_ret.s.o \
+	fexit.s.o \
+	freplace.o \
+	lsm.o \
+	lsm.s.o \
+	iter.o \
+	xdp_devmap.o \
+	xdp_cpumap.o \
+	sk_lookup.o
+
+all: $(SRC).o $(STRAIGHTFORWARDS_TYPES) $(COMPOUND_TYPES)
 
 define compile_with_sec_name
 	$(Q)sed 's=^/\* SECTION_NAME_PLACEHOLDER \*/$$=SEC("$(2)")=' $(1) | \
@@ -61,35 +90,8 @@ $(SRC).o: $(SRC).c
 	$(Q)$(CLANG) -O2 -g -emit-llvm -c $^ -o - | \
 		$(LLC) -march=bpf -mcpu=v3 -filetype=obj -o $@
 
-kprobe.o: $(SRC).c
-	$(call compile_with_sec_name,$<,kprobe/open_at)
-
-# struct_ops.o
-# kprobe/
-# uprobe/
-# kretprobe/
-# uretprobe/
-# tracepoint/
-# tp/
-# raw_tracepoint/
-# raw_tp/
-# tp_btf/
-# fentry/
-# fmod_ret/
-# fexit/
-# fentry.s/
-# fmod_ret.s/
-# fexit.s/
-# freplace/
-# lsm/
-# lsm.s/
-# iter/
-# xdp_devmap/
-# xdp_cpumap/
-# sk_lookup/
-
-$(STRAIGHTFORWARDS_TYPES): $(SRC).c
-	$(call compile_with_sec_name,$<,$(subst .,/,$(basename $@)))
+$(STRAIGHTFORWARDS_TYPES) $(COMPOUND_TYPES): $(SRC).c
+	$(call compile_with_sec_name,$<,$(subst .,/,$(basename $@))/)
 
 clean:
 	rm -rf -- *.o
