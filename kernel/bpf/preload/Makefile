@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-2.0
 
 LIBBPF_SRCS = $(srctree)/tools/lib/bpf/
-LIBBPF_A = $(obj)/libbpf/libbpf.a
 LIBBPF_OUT = $(abspath $(obj))/libbpf
+LIBBPF_A = $(LIBBPF_OUT)/libbpf.a
 LIBBPF_DESTDIR = $(LIBBPF_OUT)
 LIBBPF_INCLUDE = $(LIBBPF_DESTDIR)/include
 
@@ -13,6 +13,10 @@ $(LIBBPF_A): | $(LIBBPF_OUT) $(LIBBPF_INCLUDE)
 	$(Q)$(MAKE) -C $(LIBBPF_SRCS) O=$(LIBBPF_OUT)/ OUTPUT=$(LIBBPF_OUT)/   \
 		DESTDIR=$(LIBBPF_DESTDIR) prefix=			       \
 		$(LIBBPF_OUT)/libbpf.a install_headers
+
+libbpf-hdrs: $(LIBBPF_A)
+
+.PHONY: libbpf-hdrs
 
 $(LIBBPF_OUT) $(LIBBPF_INCLUDE):
 	$(call msg,MKDIR,$@)
@@ -26,10 +30,12 @@ userprogs := bpf_preload_umd
 clean-files := $(userprogs) bpf_helper_defs.h FEATURE-DUMP.libbpf staticobjs/ feature/
 clean-files += $(LIBBPF_OUT) $(LIBBPF_DESTDIR)
 
+$(obj)/iterators/iterators.o: libbpf-hdrs
+
 bpf_preload_umd-objs := iterators/iterators.o
 bpf_preload_umd-userldlibs := $(LIBBPF_A) -lelf -lz
 
-$(obj)/bpf_preload_umd: $(LIBBPF_A)
+bpf_preload_umd: $(LIBBPF_A)
 
 $(obj)/bpf_preload_umd_blob.o: $(obj)/bpf_preload_umd
 
