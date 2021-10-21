@@ -23,11 +23,16 @@ class Tester:
         self.results = []
 
     def bpftool(args):
+        print("> bpftool ", args)
         try:
             complProc = subprocess.run([ "bpftool" ] + args,
                     capture_output=True, check=True)
+            print(complProc.stdout.decode())
+            print(complProc.stderr.decode())
             return None
         except subprocess.CalledProcessError as e:
+            print(e.stdout.decode())
+            print(e.stderr.decode())
             return e
 
     def handleResult(self, name, err, shouldPass):
@@ -48,16 +53,16 @@ class Tester:
 class ProgTester(Tester):
     PROG_TYPES = [
         { "name": "socket",                 "shouldPass": True },
-        { "name": "kprobe",                 "shouldPass": True },
-        { "name": "kretprobe",              "shouldPass": True },
-        { "name": "uprobe",                 "shouldPass": True },
-        { "name": "uretprobe",              "shouldPass": True },
+        { "name": "kprobe/",                 "shouldPass": True },
+        { "name": "kretprobe/",              "shouldPass": True },
+        { "name": "uprobe/",                 "shouldPass": True },
+        { "name": "uretprobe/",              "shouldPass": True },
         { "name": "classifier",             "shouldPass": True },
         { "name": "action",                 "shouldPass": True },
-        { "name": "tracepoint",             "shouldPass": True },
-        { "name": "raw_tracepoint",         "shouldPass": True },
-        { "name": "tp",                     "shouldPass": True },
-        { "name": "raw_tp",                 "shouldPass": True },
+        { "name": "tracepoint/",             "shouldPass": True },
+        { "name": "raw_tracepoint/",         "shouldPass": True },
+        { "name": "tp/",                     "shouldPass": True },
+        { "name": "raw_tp/",                 "shouldPass": True },
         { "name": "xdp",                    "shouldPass": True },
         { "name": "perf_event",             "shouldPass": True },
         { "name": "cgroup/skb",             "shouldPass": True },
@@ -97,8 +102,8 @@ class ProgTester(Tester):
         { "name": "sk_skb/stream_parser",   "shouldPass": True },
         { "name": "sk_skb/stream_verdict",  "shouldPass": True },
         { "name": "sk_lookup",              "shouldPass": True },
-        { "name": "xdp_devmap",             "shouldPass": True },
-        { "name": "xdp_cpumap",             "shouldPass": True },
+        { "name": "xdp_devmap/",             "shouldPass": True },
+        { "name": "xdp_cpumap/",             "shouldPass": True },
 
         # bpftool struc_ops
         { "name": "struct_ops",             "shouldPass": False },

@@ -48,7 +48,7 @@ STRAIGHTFORWARDS_TYPES = \
 	cgroup.sysctl.o \
 	cgroup.getsockopt.o \
 	cgroup.setsockopt.o \
-	struct_ops.o
+	sk_lookup.o
 
 # These types require an additional "parameter" in the section name, the name
 # of the hook of the provided type on which the program should be attached.
@@ -76,7 +76,10 @@ COMPOUND_TYPES = \
 	iter.o \
 	xdp_devmap.o \
 	xdp_cpumap.o \
-	sk_lookup.o
+	struct_ops.o
+
+# Alternatively, get types with:
+# sed -n 's/^\tSEC_DEF("\([^"]\+\)",.*),$/\1/p' ../../../lib/bpf/libbpf.c
 
 all: $(SRC).o $(STRAIGHTFORWARDS_TYPES) $(COMPOUND_TYPES)
 
@@ -90,7 +93,10 @@ $(SRC).o: $(SRC).c
 	$(Q)$(CLANG) -O2 -g -emit-llvm -c $^ -o - | \
 		$(LLC) -march=bpf -mcpu=v3 -filetype=obj -o $@
 
-$(STRAIGHTFORWARDS_TYPES) $(COMPOUND_TYPES): $(SRC).c
+$(STRAIGHTFORWARDS_TYPES): $(SRC).c
+	$(call compile_with_sec_name,$<,$(subst .,/,$(basename $@)))
+
+$(COMPOUND_TYPES): $(SRC).c
 	$(call compile_with_sec_name,$<,$(subst .,/,$(basename $@))/)
 
 clean:
