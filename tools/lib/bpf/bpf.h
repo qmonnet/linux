@@ -221,6 +221,7 @@ LIBBPF_API int bpf_map_update_batch(int fd, void *keys, void *values,
 
 LIBBPF_API int bpf_obj_pin(int fd, const char *pathname);
 LIBBPF_API int bpf_obj_get(const char *pathname);
+LIBBPF_API int bpf_obj_get_xattr(union bpf_attr *attr);
 
 struct bpf_prog_attach_opts {
 	size_t sz; /* size of this struct for forward/backward compatibility */

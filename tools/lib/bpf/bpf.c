@@ -669,16 +669,21 @@ int bpf_obj_pin(int fd, const char *pathname)
 	return libbpf_err_errno(ret);
 }
 
+int bpf_obj_get_xattr(union bpf_attr *attr)
+{
+	int fd = sys_bpf_fd(BPF_OBJ_GET, attr, sizeof(*attr));
+
+	return libbpf_err_errno(fd);
+}
+
 int bpf_obj_get(const char *pathname)
 {
 	union bpf_attr attr;
-	int fd;
 
 	memset(&attr, 0, sizeof(attr));
 	attr.pathname = ptr_to_u64((void *)pathname);
 
-	fd = sys_bpf_fd(BPF_OBJ_GET, &attr, sizeof(attr));
-	return libbpf_err_errno(fd);
+	return bpf_obj_get_xattr(&attr);
 }
 
 int bpf_prog_attach(int prog_fd, int target_fd, enum bpf_attach_type type,
