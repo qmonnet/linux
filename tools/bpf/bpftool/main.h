@@ -142,10 +142,11 @@ int cmd_select(const struct cmd *cmds, int argc, char **argv,
 int get_fd_type(int fd);
 const char *get_fd_type_name(enum bpf_obj_type type);
 char *get_fdinfo(int fd, const char *key);
-int open_obj_pinned(const char *path, bool quiet);
-int open_obj_pinned_any(const char *path, enum bpf_obj_type exp_type);
+int open_obj_pinned_any(const char *path, enum bpf_obj_type exp_type,
+			__u32 flags);
 int mount_bpffs_for_pin(const char *name);
-int do_pin_any(int argc, char **argv, int (*get_fd_by_id)(int *, char ***));
+int do_pin_any(int argc, char **argv,
+	       int (*get_fd_by_id)(int *, char ***, __u32));
 int do_pin_fd(int fd, const char *name);
 
 /* commands available in bootstrap mode */
@@ -168,9 +169,10 @@ int do_iter(int argc, char **argv) __weak;
 int parse_u32_arg(int *argc, char ***argv, __u32 *val, const char *what);
 int prog_parse_fd(int *argc, char ***argv);
 int prog_parse_fds(int *argc, char ***argv, int **fds);
-int map_parse_fd(int *argc, char ***argv);
-int map_parse_fds(int *argc, char ***argv, int **fds);
-int map_parse_fd_and_info(int *argc, char ***argv, void *info, __u32 *info_len);
+int map_parse_fd(int *argc, char ***argv, __u32 flags);
+int map_parse_fds(int *argc, char ***argv, int **fds, __u32 flags);
+int map_parse_fd_and_info(int *argc, char ***argv, void *info, __u32 *info_len,
+			  __u32 flags);
 
 struct bpf_prog_linfo;
 #ifdef HAVE_LIBBFD_SUPPORT

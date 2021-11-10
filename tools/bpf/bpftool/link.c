@@ -52,7 +52,7 @@ static int link_parse_fd(int *argc, char ***argv)
 		path = **argv;
 		NEXT_ARGP();
 
-		return open_obj_pinned_any(path, BPF_OBJ_LINK);
+		return open_obj_pinned_any(path, BPF_OBJ_LINK, 0);
 	}
 
 	p_err("expected 'id' or 'pinned', got: '%s'?", **argv);
@@ -360,11 +360,17 @@ static int do_show(int argc, char **argv)
 	return errno == ENOENT ? 0 : -1;
 }
 
+static int link_parse_fd_with_flags(int *argc, char ***argv,
+				    __maybe_unused __u32 dummy)
+{
+	return link_parse_fd(argc, argv);
+}
+
 static int do_pin(int argc, char **argv)
 {
 	int err;
 
-	err = do_pin_any(argc, argv, link_parse_fd);
+	err = do_pin_any(argc, argv, link_parse_fd_with_flags);
 	if (!err && json_output)
 		jsonw_null(json_wtr);
 	return err;

@@ -998,11 +998,17 @@ exit_free:
 	return err;
 }
 
+static int
+prog_parse_fd_with_flags(int *argc, char ***argv, __maybe_unused __u32 dummy)
+{
+	return prog_parse_fd(argc, argv);
+}
+
 static int do_pin(int argc, char **argv)
 {
 	int err;
 
-	err = do_pin_any(argc, argv, prog_parse_fd);
+	err = do_pin_any(argc, argv, prog_parse_fd_with_flags);
 	if (!err && json_output)
 		jsonw_null(json_wtr);
 	return err;
@@ -1047,7 +1053,7 @@ static int parse_attach_detach_args(int argc, char **argv, int *progfd,
 	if (!REQ_ARGS(2))
 		return -EINVAL;
 
-	*mapfd = map_parse_fd(&argc, &argv);
+	*mapfd = map_parse_fd(&argc, &argv, 0);
 	if (*mapfd < 0)
 		return *mapfd;
 
@@ -1542,7 +1548,7 @@ static int load_with_options(int argc, char **argv, bool first_prog_only)
 			}
 			NEXT_ARG();
 
-			fd = map_parse_fd(&argc, &argv);
+			fd = map_parse_fd(&argc, &argv, BPF_F_RDONLY);
 			if (fd < 0)
 				goto err_free_reuse_maps;
 
