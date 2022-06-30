@@ -19,6 +19,16 @@ enum bpf_link_type___local {
 	BPF_LINK_TYPE_PERF_EVENT = 7,
 };
 
+struct bpf_iter_meta___local {
+	struct seq_file *seq;
+} __attribute__((preserve_access_index));
+
+struct bpf_iter__task_file___local {
+	struct bpf_iter_meta___local *meta;
+	struct task_struct *task;
+	struct file *file;
+} __attribute__((preserve_access_index));
+
 struct bpf_perf_link___local {
 	struct bpf_link link;
 	struct file *perf_file;
@@ -66,10 +76,11 @@ static __u64 get_bpf_cookie(struct bpf_link *link)
 }
 
 SEC("iter/task_file")
-int iter(struct bpf_iter__task_file *ctx)
+int iter(struct bpf_iter__task_file___local *ctx)
 {
-	struct file *file = ctx->file;
-	struct task_struct *task = ctx->task;
+	struct file *file = BPF_CORE_READ(ctx, file);
+	struct task_struct *task = BPF_CORE_READ(ctx, task);
+	struct seq_file *seq = BPF_CORE_READ(ctx, meta, seq);
 	struct pid_iter_entry e;
 	const void *fops;
 
@@ -113,7 +124,7 @@ int iter(struct bpf_iter__task_file *ctx)
 
 	bpf_probe_read_kernel_str(&e.comm, sizeof(e.comm),
 				  task->group_leader->comm);
-	bpf_seq_write(ctx->meta->seq, &e, sizeof(e));
+	bpf_seq_write(seq, &e, sizeof(e));
 
 	return 0;
 }
