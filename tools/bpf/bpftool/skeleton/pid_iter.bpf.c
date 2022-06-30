@@ -29,8 +29,13 @@ struct bpf_iter__task_file___local {
 	struct file *file;
 } __attribute__((preserve_access_index));
 
+struct bpf_link___local {
+	u32 id;
+	enum bpf_link_type___local type;
+} __attribute__((preserve_access_index));
+
 struct bpf_perf_link___local {
-	struct bpf_link link;
+	struct bpf_link___local link;
 	struct file *perf_file;
 } __attribute__((preserve_access_index));
 
@@ -55,14 +60,14 @@ static __always_inline __u32 get_obj_id(void *ent, enum bpf_obj_type type)
 	case BPF_OBJ_BTF:
 		return BPF_CORE_READ((struct btf *)ent, id);
 	case BPF_OBJ_LINK:
-		return BPF_CORE_READ((struct bpf_link *)ent, id);
+		return BPF_CORE_READ((struct bpf_link___local *)ent, id);
 	default:
 		return 0;
 	}
 }
 
 /* could be used only with BPF_LINK_TYPE_PERF_EVENT links */
-static __u64 get_bpf_cookie(struct bpf_link *link)
+static __u64 get_bpf_cookie(struct bpf_link___local *link)
 {
 	struct bpf_perf_link___local *perf_link = NULL;
 	struct perf_event___local *event;
@@ -113,7 +118,7 @@ int iter(struct bpf_iter__task_file___local *ctx)
 
 	if (obj_type == BPF_OBJ_LINK &&
 	    bpf_core_enum_value_exists(enum bpf_link_type___local, BPF_LINK_TYPE_PERF_EVENT)) {
-		struct bpf_link *link = (struct bpf_link *) file->private_data;
+		struct bpf_link___local *link = (struct bpf_link___local *) file->private_data;
 
 		if (BPF_CORE_READ(link, type) == bpf_core_enum_value(enum bpf_link_type___local,
 								     BPF_LINK_TYPE_PERF_EVENT)) {
