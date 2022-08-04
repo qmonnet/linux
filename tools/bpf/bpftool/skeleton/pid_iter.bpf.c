@@ -16,7 +16,7 @@ enum bpf_obj_type {
 };
 
 enum bpf_link_type___local {
-	BPF_LINK_TYPE_PERF_EVENT = 7,
+	BPF_LINK_TYPE_PERF_EVENT___local = 7,
 };
 
 struct bpf_iter_meta___local {
@@ -85,7 +85,6 @@ int iter(struct bpf_iter__task_file___local *ctx)
 {
 	struct file *file = BPF_CORE_READ(ctx, file);
 	struct task_struct *task = BPF_CORE_READ(ctx, task);
-	struct seq_file *seq = BPF_CORE_READ(ctx, meta, seq);
 	struct pid_iter_entry e;
 	const void *fops;
 
@@ -109,27 +108,28 @@ int iter(struct bpf_iter__task_file___local *ctx)
 		return 0;
 	}
 
-	if (file->f_op != fops)
+	if (BPF_CORE_READ(file, f_op) != fops)
 		return 0;
 
 	__builtin_memset(&e, 0, sizeof(e));
-	e.pid = task->tgid;
-	e.id = get_obj_id(file->private_data, obj_type);
+	e.pid = BPF_CORE_READ(task, tgid);
+	e.id = get_obj_id(BPF_CORE_READ(file, private_data), obj_type);
 
 	if (obj_type == BPF_OBJ_LINK &&
-	    bpf_core_enum_value_exists(enum bpf_link_type___local, BPF_LINK_TYPE_PERF_EVENT)) {
-		struct bpf_link___local *link = (struct bpf_link___local *) file->private_data;
+	    bpf_core_enum_value_exists(enum bpf_link_type___local,
+				       BPF_LINK_TYPE_PERF_EVENT___local)) {
+		struct bpf_link___local *link = (struct bpf_link___local *) BPF_CORE_READ(file, private_data);
 
 		if (BPF_CORE_READ(link, type) == bpf_core_enum_value(enum bpf_link_type___local,
-								     BPF_LINK_TYPE_PERF_EVENT)) {
+								     BPF_LINK_TYPE_PERF_EVENT___local)) {
 			e.has_bpf_cookie = true;
 			e.bpf_cookie = get_bpf_cookie(link);
 		}
 	}
 
 	bpf_probe_read_kernel_str(&e.comm, sizeof(e.comm),
-				  task->group_leader->comm);
-	bpf_seq_write(seq, &e, sizeof(e));
+				  BPF_CORE_READ(task, group_leader, comm));
+	bpf_seq_write(ctx->meta->seq, &e, sizeof(e));
 
 	return 0;
 }
