@@ -17,15 +17,15 @@ jobs:
       matrix:
         include:
           - kernel: 'LATEST'
-            runs_on: [ubuntu-latest, self-hosted]
+            runs_on: [ubuntu-latest]
             arch: 'x86_64'
             toolchain: 'gcc'
           - kernel: 'LATEST'
-            runs_on: [ubuntu-latest, self-hosted]
+            runs_on: [ubuntu-latest]
             arch: 'x86_64'
             toolchain: 'llvm-16'
           - kernel: 'LATEST'
-            runs_on: [z15, self-hosted]
+            runs_on: [z15]
             arch: 's390x'
             toolchain: 'gcc'
     env:
