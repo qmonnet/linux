@@ -1037,6 +1037,67 @@ int map_parse_fd_and_info(int *argc, char ***argv, void *info, __u32 *info_len)
 	return fd;
 }
 
+char *format_type_list(const char *(*type_name_fn)(unsigned int),
+		       bool (*filter)(const char *), const char *list_name)
+{
+	size_t buff_len = 1 << 10, len = 0, cur_line_len;
+	unsigned int type = 1, indent;
+	char* buff = NULL;
+
+	buff = malloc(buff_len);
+	if (!buff)
+		return NULL;
+
+	if (strlen(list_name) + strlen("        := {") >= buff_len)
+		return NULL;
+	len = snprintf(buff, buff_len, "       %s := { ", list_name);
+	if (len <= 0 || len >= buff_len)
+		return NULL;
+
+	indent = cur_line_len = len;
+
+	while (true) {
+		bool break_line = false;
+		const char *type_str;
+		size_t type_len;
+
+		type_str = type_name_fn(type++);
+		if (!type_str)
+			break;
+		if (filter && !filter(type_str))
+			continue;
+
+		type_len = strlen(type_str) + strlen(" | ");
+		if (cur_line_len + type_len > 80)
+			break_line = true;
+
+		if (len + type_len + (break_line ? indent : 0) >= buff_len) {
+			char *tmp;
+
+			buff_len *= 2;
+			tmp = realloc(buff, buff_len);
+			if (!tmp)
+				return NULL;
+			buff = tmp;
+		}
+
+		if (break_line) {
+			buff[len - 1] = '\n';
+			snprintf(buff + len, buff_len - len, "%*s", indent, "");
+			len += indent;
+			cur_line_len = indent;
+		}
+
+		snprintf(buff + len, buff_len - len, "%s | ", type_str);
+		len += type_len;
+		cur_line_len += type_len;
+	}
+
+	buff[len - 2] = '}';
+	buff[len - 1] = '\0';
+	return buff;
+}
+
 size_t hash_fn_for_key_as_id(const void *key, void *ctx)
 {
 	return (size_t)key;

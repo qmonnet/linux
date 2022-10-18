@@ -171,6 +171,9 @@ int map_parse_fd(int *argc, char ***argv);
 int map_parse_fds(int *argc, char ***argv, int **fds);
 int map_parse_fd_and_info(int *argc, char ***argv, void *info, __u32 *info_len);
 
+char *format_type_list(const char *(*type_name_fn)(unsigned int),
+		       bool (*filter)(const char *), const char *list_name);
+
 struct bpf_prog_linfo;
 #ifdef HAVE_LIBBFD_SUPPORT
 void disasm_print_insn(unsigned char *image, ssize_t len, int opcodes,

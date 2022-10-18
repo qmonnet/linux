@@ -1423,6 +1423,10 @@ static int do_freeze(int argc, char **argv)
 
 static int do_help(int argc, char **argv)
 {
+	char *type_list;
+
+	type_list = format_type_list(libbpf_bpf_map_type_str, NULL, "TYPE");
+
 	if (json_output) {
 		jsonw_null(json_wtr);
 		return 0;
@@ -1453,17 +1457,11 @@ static int do_help(int argc, char **argv)
 		"       " HELP_SPEC_PROGRAM "\n"
 		"       VALUE := { DATA | MAP | PROG }\n"
 		"       UPDATE_FLAGS := { any | exist | noexist }\n"
-		"       TYPE := { hash | array | prog_array | perf_event_array | percpu_hash |\n"
-		"                 percpu_array | stack_trace | cgroup_array | lru_hash |\n"
-		"                 lru_percpu_hash | lpm_trie | array_of_maps | hash_of_maps |\n"
-		"                 devmap | devmap_hash | sockmap | cpumap | xskmap | sockhash |\n"
-		"                 cgroup_storage | reuseport_sockarray | percpu_cgroup_storage |\n"
-		"                 queue | stack | sk_storage | struct_ops | ringbuf | inode_storage |\n"
-		"                 task_storage | bloom_filter | user_ringbuf }\n"
+		"%3$s\n"
 		"       " HELP_SPEC_OPTIONS " |\n"
 		"                    {-f|--bpffs} | {-n|--nomount} }\n"
 		"",
-		bin_name, argv[-2]);
+		bin_name, argv[-2], type_list ? : "");
 
 	return 0;
 }

@@ -365,17 +365,11 @@ class MapFileExtractor(SourceFileExtractor):
     """
     filename = os.path.join(BPFTOOL_DIR, 'map.c')
 
-    def get_map_help(self):
-        return self.get_help_list('TYPE')
-
 class CgroupFileExtractor(SourceFileExtractor):
     """
     An extractor for bpftool's cgroup.c.
     """
     filename = os.path.join(BPFTOOL_DIR, 'cgroup.c')
-
-    def get_prog_attach_help(self):
-        return self.get_help_list('ATTACH_TYPE')
 
 class GenericSourceExtractor(SourceFileExtractor):
     """
@@ -501,7 +495,6 @@ def main():
     source_map_types = set(bpf_info.get_map_type_map().values())
     source_map_types.discard('unspec')
 
-    help_map_types = map_info.get_map_help()
     help_map_options = map_info.get_options()
     map_info.close()
 
@@ -510,8 +503,6 @@ def main():
     man_map_types = man_map_info.get_map_types()
     man_map_info.close()
 
-    verify(source_map_types, help_map_types,
-            f'Comparing {BpfHeaderExtractor.filename} (bpf_map_type) and {MapFileExtractor.filename} (do_help() TYPE):')
     verify(source_map_types, man_map_types,
             f'Comparing {BpfHeaderExtractor.filename} (bpf_map_type) and {ManMapExtractor.filename} (TYPE):')
     verify(help_map_options, man_map_options,
@@ -550,7 +541,6 @@ def main():
     bpf_info.close()
 
     cgroup_info = CgroupFileExtractor()
-    help_cgroup_attach_types = cgroup_info.get_prog_attach_help()
     help_cgroup_options = cgroup_info.get_options()
     cgroup_info.close()
 
@@ -559,8 +549,6 @@ def main():
     man_cgroup_attach_types = man_cgroup_info.get_attach_types()
     man_cgroup_info.close()
 
-    verify(source_cgroup_attach_types, help_cgroup_attach_types,
-            f'Comparing {BpfHeaderExtractor.filename} (bpf_attach_type) and {CgroupFileExtractor.filename} (do_help() ATTACH_TYPE):')
     verify(source_cgroup_attach_types, man_cgroup_attach_types,
             f'Comparing {BpfHeaderExtractor.filename} (bpf_attach_type) and {ManCgroupExtractor.filename} (ATTACH_TYPE):')
     verify(help_cgroup_options, man_cgroup_options,

@@ -22,20 +22,6 @@
 #define HELP_SPEC_ATTACH_FLAGS						\
 	"ATTACH_FLAGS := { multi | override }"
 
-#define HELP_SPEC_ATTACH_TYPES						\
-	"       ATTACH_TYPE := { cgroup_inet_ingress | cgroup_inet_egress |\n" \
-	"                        cgroup_inet_sock_create | cgroup_sock_ops |\n" \
-	"                        cgroup_device | cgroup_inet4_bind |\n" \
-	"                        cgroup_inet6_bind | cgroup_inet4_post_bind |\n" \
-	"                        cgroup_inet6_post_bind | cgroup_inet4_connect |\n" \
-	"                        cgroup_inet6_connect | cgroup_inet4_getpeername |\n" \
-	"                        cgroup_inet6_getpeername | cgroup_inet4_getsockname |\n" \
-	"                        cgroup_inet6_getsockname | cgroup_udp4_sendmsg |\n" \
-	"                        cgroup_udp6_sendmsg | cgroup_udp4_recvmsg |\n" \
-	"                        cgroup_udp6_recvmsg | cgroup_sysctl |\n" \
-	"                        cgroup_getsockopt | cgroup_setsockopt |\n" \
-	"                        cgroup_inet_sock_release }"
-
 static unsigned int query_flags;
 static struct btf *btf_vmlinux;
 static __u32 btf_vmlinux_id;
@@ -614,8 +600,18 @@ exit:
 	return ret;
 }
 
+static bool has_cgroup_prefix(const char *name)
+{
+	return !strncmp(name, "cgroup_", strlen("cgroup_"));
+}
+
 static int do_help(int argc, char **argv)
 {
+	char *type_list;
+
+	type_list = format_type_list(libbpf_bpf_attach_type_str,
+				     has_cgroup_prefix, "ATTACH_TYPE");
+
 	if (json_output) {
 		jsonw_null(json_wtr);
 		return 0;
@@ -628,13 +624,13 @@ static int do_help(int argc, char **argv)
 		"       %1$s %2$s detach CGROUP ATTACH_TYPE PROG\n"
 		"       %1$s %2$s help\n"
 		"\n"
-		HELP_SPEC_ATTACH_TYPES "\n"
+		"%3$s\n"
 		"       " HELP_SPEC_ATTACH_FLAGS "\n"
 		"       " HELP_SPEC_PROGRAM "\n"
 		"       " HELP_SPEC_OPTIONS " |\n"
 		"                    {-f|--bpffs} }\n"
 		"",
-		bin_name, argv[-2]);
+		bin_name, argv[-2], type_list ? : " ");
 
 	return 0;
 }
